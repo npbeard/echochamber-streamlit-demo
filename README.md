@@ -1,1 +1,1 @@
-# echochamber-streamlit-demo
+# echochamber-streamlit
