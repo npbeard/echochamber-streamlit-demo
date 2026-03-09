@@ -26,8 +26,11 @@ persona = Persona(name="StreamlitUser", voice=voice, config=cfg)
 persona.add_tags("streamlit")
 
 if st.button("Echo"):
-    placeholder = st.empty()
-    output = ""
-    for chunk in persona.echo(text, chunk_size=chunk_size, layers=layers, intensity=intensity):
-        output += chunk
-        placeholder.markdown(output)
+    if not text.strip():
+        st.warning("Please enter some text.")
+    else:
+        placeholder = st.empty()
+        output = ""
+        for chunk in persona.echo(text, chunk_size=chunk_size, layers=layers, intensity=intensity):
+            output += chunk
+            placeholder.markdown(output)
