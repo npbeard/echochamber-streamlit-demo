@@ -1,26 +1,44 @@
-# 🌌 Echochamber Streamlit Demo
+# Echochamber Streamlit Demo
 
 This repository contains a small **Streamlit application** demonstrating the use of the **echochamber Python library**.
 
-The app allows users to enter text and transform it using different digital personas provided by the library.
+Package repository: `https://github.com/npbeard/python-package`
 
-The library itself is developed as part of the **Python for Data Analysis II Object-Oriented Programming project**.
+## Purpose
 
----
+This app demonstrates that the library can be imported and used from a different project. It exposes the package features that are easiest to show in class or in a short video:
 
-# 📦 Library Used
+- persona classes and instances
+- composition between `Persona` and the selected voice
+- immutable configuration via `EngineConfig`
+- recursion through the `layers` control
+- generators through chunked streaming output
+- regular expressions through chaos mode
+- datetime formatting through timestamp output
 
-The application uses the **echochamber-group8** package published on **TestPyPI**.
+## Installation
 
-Library repository:  
-https://github.com/npbeard/python-package
-
----
-
-# 🚀 Installation
-
-Clone the repository:
+Create and activate a virtual environment if needed, then install the demo requirements:
 
 ```bash
-git clone https://github.com/npbeard/echochamber-streamlit-demo.git
-cd echochamber-streamlit-demo
+pip install -r requirements.txt
+```
+
+If you prefer installing manually, use:
+
+```bash
+pip install streamlit
+pip install --extra-index-url https://test.pypi.org/simple/ echochamber
+```
+
+## Run The App
+
+```bash
+streamlit run app.py
+```
+
+## Files In This Repo
+
+- [`app.py`]: Streamlit interface that imports and uses the package
+- [`requirements.txt`]: demo app dependencies
+- [`SUBMISSION_GUIDE.md`]: material you can reuse for the PDF and Blackboard submission
