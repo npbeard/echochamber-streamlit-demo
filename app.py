@@ -1,14 +1,23 @@
 from __future__ import annotations
 
+import importlib
 import time
 
-import streamlit as st
+import streamlit as st  # type: ignore
 
 try:
-    from echochamber import NoirVoice, Persona, SciFiVoice, TherapyVoice
-    from echochamber.utils import EngineConfig
-except ImportError:
-    st.set_page_config(page_title="echochamber demo", page_icon="🌌", layout="wide")
+    echochamber = importlib.import_module("echochamber")
+    echochamber_utils = importlib.import_module("echochamber.utils")
+
+    NoirVoice = echochamber.NoirVoice
+    Persona = echochamber.Persona
+    SciFiVoice = echochamber.SciFiVoice
+    TherapyVoice = echochamber.TherapyVoice
+    EngineConfig = echochamber_utils.EngineConfig
+except ModuleNotFoundError:
+    st.set_page_config(
+        page_title="echochamber demo", page_icon="🌌", layout="wide"
+    )
     st.error(
         "The `echochamber` package is not installed. "
         "Install the library from TestPyPI before running this app."
@@ -18,9 +27,9 @@ except ImportError:
         "echochamber"
     )
     st.stop()
-
-
-st.set_page_config(page_title="echochamber demo", page_icon="🌌", layout="wide")
+st.set_page_config(
+    page_title="echochamber demo", page_icon="🌌", layout="wide"
+)
 
 VOICE_MAP = {
     "noir": NoirVoice,
@@ -29,13 +38,18 @@ VOICE_MAP = {
 }
 
 EXAMPLES = {
-    "Weather report": "The weather is quite rainy today.",
-    "Presentation pitch": "Our group built a Python package for text personas.",
-    "Stressful deadline": "We need to finish the PDF and the upload tonight.",
+    "Weather report":
+        "The weather is quite rainy today.",
+    "Presentation pitch":
+        "Our group built a Python package for text personas.",
+    "Stressful deadline":
+        "We need to finish the PDF and the upload tonight.",
 }
 
 
-def build_persona(name: str, voice_name: str, include_time: bool, chaos: bool) -> Persona:
+def build_persona(
+    name: str, voice_name: str, include_time: bool, chaos: bool
+) -> Persona:
     """Create the demo persona with a deterministic set of tags."""
     config = EngineConfig(include_time=include_time, chaos=chaos)
     persona = Persona(name=name, voice=VOICE_MAP[voice_name](), config=config)
@@ -49,7 +63,8 @@ def build_persona(name: str, voice_name: str, include_time: bool, chaos: bool) -
 
 st.title("🌌 echochamber demo")
 st.caption(
-    "Separate Streamlit project that consumes the published `echochamber` package."
+    "Separate Streamlit project that consumes "
+    "the published `echochamber` package."
 )
 
 with st.sidebar:
@@ -83,7 +98,10 @@ with left_col:
         if not text.strip():
             st.warning("Please enter some text.")
         else:
-            result = persona.echo_once(text, layers=layers, intensity=intensity)
+            result = persona.echo_once(
+                text,
+                layers=layers,
+                intensity=intensity)
             transformed = result["result"].transformed
 
             if stream_output:
@@ -116,7 +134,7 @@ with right_col:
     st.subheader("Library concepts in use")
     st.markdown(
         """
-        - `Persona` and the voice classes demonstrate classes, instances, and composition.
+        - `Persona` and voice classes show composition and instances.
         - `EngineConfig` is an immutable dataclass passed into the package.
         - `persona.echo()` streams chunks with a generator.
         - `layers` drives recursion inside the library.
