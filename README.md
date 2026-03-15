@@ -42,3 +42,16 @@ streamlit run app.py
 - [`app.py`]: Streamlit interface that imports and uses the package
 - [`requirements.txt`]: demo app dependencies
 - [`SUBMISSION_GUIDE.md`]: material you can reuse for the PDF and Blackboard submission
+
+  
+## Example Usage
+
+1. Run the Streamlit app:
+
+streamlit run app.py
+
+2. Enter text into the input box.
+
+3. Select a voice style (Noir, SciFi, or Therapy).
+
+4. Click **Echo** to transform the text using the echochamber library.
