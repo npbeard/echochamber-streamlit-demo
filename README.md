@@ -1,6 +1,6 @@
 # Echochamber Streamlit Demo
 
-This repository contains a small **Streamlit application** demonstrating the use of the **echochamber Python library**.
+This repository contains a small **Streamlit application** demonstrating the use of the **echochamber Python library** as a multi-persona conversation simulator.
 
 Package repository: `https://github.com/npbeard/python-package`
 
@@ -9,12 +9,13 @@ Package repository: `https://github.com/npbeard/python-package`
 This app demonstrates that the library can be imported and used from a different project. It exposes the package features that are easiest to show in class or in a short video:
 
 - persona classes and instances
-- composition between `Persona` and the selected voice
+- composition between `Conversation`, `Persona`, and the selected voice
 - immutable configuration via `EngineConfig`
 - recursion through the `layers` control
-- generators through chunked streaming output
+- generators through chunked transcript replay
 - regular expressions through chaos mode
 - datetime formatting through timestamp output
+- collections, JSON persistence, and transcript statistics
 
 ## Installation
 
@@ -41,17 +42,17 @@ streamlit run app.py
 
 - [`app.py`]: Streamlit interface that imports and uses the package
 - [`requirements.txt`]: demo app dependencies
-- [`SUBMISSION_GUIDE.md`]: material you can reuse for the PDF and Blackboard submission
 
-  
 ## Example Usage
 
 1. Run the Streamlit app:
 
-streamlit run app.py
+   ```bash
+   streamlit run app.py
+   ```
 
-2. Enter text into the input box.
+2. Enter or select a discussion topic.
 
-3. Select a voice style (Noir, SciFi, or Therapy).
+3. Select one or more persona voices.
 
-4. Click **Echo** to transform the text using the echochamber library.
+4. Click **Run Simulation** to generate a transcript, replay it, and inspect the structured results.
