@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import json
 import time
 
 import streamlit as st  # type: ignore
@@ -9,6 +10,7 @@ try:
     echochamber = importlib.import_module("echochamber")
     echochamber_utils = importlib.import_module("echochamber.utils")
 
+    Conversation = echochamber.Conversation
     NoirVoice = echochamber.NoirVoice
     Persona = echochamber.Persona
     SciFiVoice = echochamber.SciFiVoice
@@ -16,7 +18,7 @@ try:
     EngineConfig = echochamber_utils.EngineConfig
 except ModuleNotFoundError:
     st.set_page_config(
-        page_title="echochamber demo", page_icon="🌌", layout="wide"
+        page_title="echochamber simulator", page_icon="🌌", layout="wide"
     )
     st.error(
         "The `echochamber` package is not installed. "
@@ -27,8 +29,9 @@ except ModuleNotFoundError:
         "echochamber"
     )
     st.stop()
+
 st.set_page_config(
-    page_title="echochamber demo", page_icon="🌌", layout="wide"
+    page_title="echochamber simulator", page_icon="🌌", layout="wide"
 )
 
 VOICE_MAP = {
@@ -38,22 +41,17 @@ VOICE_MAP = {
 }
 
 EXAMPLES = {
-    "Weather report":
-        "The weather is quite rainy today.",
-    "Presentation pitch":
-        "Our group built a Python package for text personas.",
-    "Stressful deadline":
-        "We need to finish the PDF and the upload tonight.",
+    "Launch strategy": "What would make a new digital storytelling tool memorable to first-time users?",
+    "AI ethics debate": "Should AI personas preserve the exact tone of the original author?",
+    "Deadline triage": "We have one evening left. What should we prioritize for the submission?",
 }
 
 
-def build_persona(
-    name: str, voice_name: str, include_time: bool, chaos: bool
-) -> Persona:
-    """Create the demo persona with a deterministic set of tags."""
+def build_persona(name: str, voice_name: str, include_time: bool, chaos: bool) -> Persona:
+    """Create a persona tagged for Streamlit-based simulations."""
     config = EngineConfig(include_time=include_time, chaos=chaos)
     persona = Persona(name=name, voice=VOICE_MAP[voice_name](), config=config)
-    persona.add_tags("streamlit", "demo", voice_name)
+    persona.add_tags("streamlit", "conversation", voice_name)
     if chaos:
         persona.add_tags("regex")
     if include_time:
@@ -61,91 +59,110 @@ def build_persona(
     return persona
 
 
-st.title("🌌 echochamber demo")
+st.title("🌌 echochamber simulator")
 st.caption(
-    "Separate Streamlit project that consumes "
-    "the published `echochamber` package."
+    "A separate Streamlit project that turns the published package into a "
+    "multi-persona conversation lab."
 )
 
 with st.sidebar:
-    st.header("Controls")
-    example_name = st.selectbox("Example text", list(EXAMPLES))
-    persona_name = st.text_input("Persona name", value="StreamlitUser")
-    voice_name = st.selectbox("Voice", ["noir", "scifi", "therapy"])
-    layers = st.slider("Layers (recursion)", min_value=1, max_value=5, value=1)
-    chunk_size = st.slider(
-        "Chunk size (generator streaming)", min_value=5, max_value=40, value=16
+    st.header("Simulation Controls")
+    example_name = st.selectbox("Scenario", list(EXAMPLES))
+    topic = st.text_area("Conversation topic", value=EXAMPLES[example_name], height=120)
+    selected_voices = st.multiselect(
+        "Participants",
+        options=["noir", "scifi", "therapy"],
+        default=["noir", "scifi", "therapy"],
     )
-    chaos = st.checkbox("Chaos mode (regex)", value=False)
-    intensity = st.slider("Chaos intensity", min_value=1, max_value=3, value=1)
-    include_time = st.checkbox("Include timestamp", value=True)
-    stream_output = st.checkbox("Animate generator output", value=True)
+    rounds = st.slider("Rounds", min_value=1, max_value=4, value=2)
+    layers = st.slider("Recursion layers", min_value=1, max_value=4, value=1)
+    intensity = st.slider("Chaos intensity", min_value=1, max_value=3, value=2)
+    include_time = st.checkbox("Include timestamps inside persona output", value=False)
+    chaos = st.checkbox("Chaos mode", value=False)
+    animate = st.checkbox("Animate transcript replay", value=True)
 
-text = st.text_area("Input text", value=EXAMPLES[example_name], height=140)
 
-persona = build_persona(
-    name=persona_name,
-    voice_name=voice_name,
-    include_time=include_time,
-    chaos=chaos,
-)
+def build_conversation() -> Conversation:
+    conversation = Conversation(title=topic[:40] or "Streamlit simulation")
+    for index, voice_name in enumerate(selected_voices, start=1):
+        persona = build_persona(
+            name=f"{voice_name.title()}-{index}",
+            voice_name=voice_name,
+            include_time=include_time,
+            chaos=chaos,
+        )
+        conversation.add_personas(persona)
+    return conversation
 
-left_col, right_col = st.columns([3, 2])
+
+left_col, right_col = st.columns([2.2, 1.2])
 
 with left_col:
-    st.subheader("Transformation")
-    if st.button("Echo", type="primary", use_container_width=True):
-        if not text.strip():
-            st.warning("Please enter some text.")
+    st.subheader("Transcript")
+    st.write(
+        "Run a simulation to generate a transcript, replay it in chunks, and export the session as JSON."
+    )
+    if st.button("Run Simulation", type="primary", use_container_width=True):
+        if not topic.strip():
+            st.warning("Please enter a topic before running the simulation.")
+        elif not selected_voices:
+            st.warning("Select at least one participant.")
         else:
-            result = persona.echo_once(
-                text,
+            conversation = build_conversation()
+            conversation.simulate(
+                topic,
+                rounds=rounds,
                 layers=layers,
-                intensity=intensity)
-            transformed = result["result"].transformed
-
-            if stream_output:
-                placeholder = st.empty()
-                streamed_text = ""
-                for chunk in persona.echo(
-                    text,
-                    chunk_size=chunk_size,
-                    layers=layers,
-                    intensity=intensity,
-                ):
-                    streamed_text += chunk
-                    placeholder.markdown(streamed_text)
-                    time.sleep(0.03)
-            else:
-                st.markdown(transformed)
-
-            st.divider()
-            st.subheader("Result details")
-            st.write(
-                {
-                    "original": result["result"].original,
-                    "transformed": transformed,
-                    "timestamp": result["result"].timestamp,
-                    "seconds": round(result["seconds"], 6),
-                }
+                intensity=intensity,
             )
+            st.session_state["conversation_payload"] = conversation.to_dict()
+            st.session_state["conversation_replay"] = list(conversation.replay(chunk_size=80))
+
+    payload = st.session_state.get("conversation_payload")
+    replay_chunks = st.session_state.get("conversation_replay", [])
+    if payload:
+        if animate:
+            placeholder = st.empty()
+            streamed = ""
+            for chunk in replay_chunks:
+                streamed += chunk
+                placeholder.code(streamed)
+                time.sleep(0.02)
+        else:
+            st.code("".join(replay_chunks))
+
+        st.download_button(
+            "Download session JSON",
+            data=json.dumps(payload, indent=2),
+            file_name="echochamber_session.json",
+            mime="application/json",
+            use_container_width=True,
+        )
 
 with right_col:
-    st.subheader("Library concepts in use")
+    st.subheader("Analysis")
+    payload = st.session_state.get("conversation_payload")
+    if payload:
+        stats = payload["stats"]
+        st.metric("Messages", stats["message_count"])
+        st.write("Participants", ", ".join(stats["participants"]))
+        st.write("Messages by speaker", stats["messages_by_speaker"])
+        st.write("Top words", stats["top_words"])
+        st.subheader("Transcript objects")
+        st.json(payload["history"])
+    else:
+        st.info("Run a simulation to see transcript statistics and structured message data.")
+
+    st.subheader("Concepts on display")
     st.markdown(
         """
-        - `Persona` and voice classes show composition and instances.
-        - `EngineConfig` is an immutable dataclass passed into the package.
-        - `persona.echo()` streams chunks with a generator.
-        - `layers` drives recursion inside the library.
-        - `chaos` and `intensity` trigger regex-based transformations.
-        - `include_time` shows datetime formatting.
+        - `Conversation`, `Persona`, and `Message` show classes, instances, and composition.
+        - The transcript replay uses generators and iterables.
+        - Persona configuration uses immutable dataclasses and keyword arguments.
+        - Session export uses paths, JSON, and collections.
+        - Multi-round simulation adds recursion, loops, and richer object state.
         """
     )
-
-    st.subheader("Current persona")
-    st.write(repr(persona))
-    st.write({"tags": list(persona), "voice": voice_name, "layers": layers})
 
     st.subheader("How to run")
     st.code("streamlit run app.py")
